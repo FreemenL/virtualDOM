@@ -1,3 +1,5 @@
+//根据传进来的值 产生虚拟dom 对象
+
 class Element{
 	constructor(type,props,children){
 		this.type = type;
@@ -6,6 +8,7 @@ class Element{
 	}
 }
 
+//设置属性
 function setAttr(node,key,value){
 	switch(key){
 		case"value":
@@ -26,6 +29,7 @@ function setAttr(node,key,value){
 	}
 }
 
+//生成虚拟dom 
 function createElement(type,props,children){
 
 	return new Element(type,props,children)
@@ -46,11 +50,13 @@ function render(eleObj){
 	return el;
 }
 
+//把dom挂在到页面中
 function renderDOm(el,target){
 	target.appendChild(el);
 }
 
 export { 
+	setAttr,
 	renderDOm,
 	Element,
 	createElement,
