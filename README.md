@@ -10,7 +10,8 @@
    - jsx语法的转换
 我们代码中的jsx  主要有babel 负责语法解析转换   这块主要是用到了babel-preset-react 这个预设 
 babel的预设其实就相当于是一些babel 插件的集合  pabael-preset-react 所含盖的插件包括（preset-flow，syntax-jsx，transform-react-jsx，transform-react-display-name） 他负责将我们的jsx语法转 换成js可识别 dom描述对象  原理是生成一棵抽象语法树 然后进行相应的语法转换
-    - React.createElement 方法接受转译后的dom 描述对象  创建虚拟dom树 在didmount的时候将这棵虚拟dom树转换成真正的dom 挂载到页面上
+
+    -  React.createElement 方法接受转译后的dom 描述对象  创建虚拟dom树 在didmount的时候将这棵虚拟dom树转换成真正的dom 挂载到页面上
 
 ```bash
 //根据传进来的值 产生虚拟dom 对象
