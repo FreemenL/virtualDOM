@@ -10,8 +10,7 @@
    - jsx语法的转换
 我们代码中的jsx  主要有babel 负责语法解析转换   这块主要是用到了babel-preset-react 这个预设 
 babel的预设其实就相当于是一些babel 插件的集合  pabael-preset-react 所含盖的插件包括（preset-flow，syntax-jsx，transform-react-jsx，transform-react-display-name） 他负责将我们的jsx语法转 换成js可识别 dom描述对象  原理是生成一棵抽象语法树 然后进行相应的语法转换
-
-    -  React.createElement 方法接受转译后的dom 描述对象  创建虚拟dom树 在didmount的时候将这棵虚拟dom树转换成真正的dom 挂载到页面上
+    - React.createElement 方法接受转译后的dom 描述对象  创建虚拟dom树 在didmount的时候将这棵虚拟dom树转换成真正的dom 挂载到页面上
 
 ```bash
 //根据传进来的值 产生虚拟dom 对象
@@ -159,6 +158,10 @@ function isString(node){
 我们这个地方没有引入key   其实key 在整个dom diff 中扮演了重要的 角色主要优化了这个过程的性能 
 key 主要意义是为了以最小的代价来更新dom   就是最小化性能对资源池（老树）的操作 
 
+虚拟dom的意义是  我们把对dom 的操作 都交由他来处理 避免了一些不必要的dom 回流和重绘
+相关知识可以参考 阮老师的这篇文章：
+    [网页性能管理详解](http://www.ruanyifeng.com/blog/2015/09/web-page-performance-in-depth.html)
+也就是我们在对dom 操作时读写分离的重要性 以及一些 性能优化的注意点 
 
 
 
