@@ -148,15 +148,145 @@ function isString(node){
 	return Object.prototype.toString.call(node)=="[object String]";
 }
  ```
-  
-  有几个值得注意的 地方  
+其实key 在整个dom diff 中扮演了重要的 角色主要优化了这个过程的性能 
+key 主要意义是为了以最小的代价来更新dom   就是最小化性能对资源池（老树）的操作 
+
+```js
+/**
+ * 在 dom diff 中如何识别和处理 key 
+*/
+const REMOVE = "REMOVE";
+const INSERT = "INSERT";
+
+
+class Element{
+    constructor(tagName,key,children){
+        this.tagName = tagName;
+        this.key = key;
+        this.children = children;
+    }
+    render(){
+        let element = document.createElement(this.tagName);
+        element.innerHTML = this.children;
+        element.setAttribute("key",this.key);
+        return element;
+    }
+}
+
+function el(tagName,key,children){
+    return new Element(tagName,key,children);
+}
+
+let oldChildren = [
+    el("li","A","A"),
+    el("li","B","B"),
+    el("li","C","C"),
+    el("li","D","D")
+];
+let ul = document.createElement("ul");
+oldChildren.forEach(item=> ul.appendChild(item.render()));
+document.body.appendChild(ul);
+
+let newChildren = [
+    el("li","A","A"),
+    el("li","C","C"),
+    el("li","B","B"),
+    el("li","D","D"),
+];
+
+let patches = diff(oldChildren,newChildren);
+console.log(patches)//[{ type: REMOVE,index:0},{type:INSERT,index,node}]
+patch(ul,patches);
+function patch(root,patches){
+    let oldNode;
+    let oldNodeMap = {};
+    Array.from(root.childNodes).forEach(node=>{
+        oldNodeMap[node.getAttribute("key")] = node  
+    });
+    patches.forEach(patch=>{
+        switch(patch.type){
+            case INSERT:
+                let newNode;
+                if(oldNodeMap[patch.node.key]){
+                    newNode = oldNodeMap[patch.node.key];
+                    delete oldNodeMap[patch.node.key];
+                }else{
+                    newNode = patch.node.render();
+                }
+                oldNode = root.childNodes[patch.index];
+                if(oldNode){
+                    root.insertBefore(newNode,oldNode);
+                }else{
+                    root.appendChild(newNode);
+                }
+                break;
+            case REMOVE:
+                oldNode = root.childNodes[patch.index];
+                root.removeChild(oldNode);
+                break;
+            default:
+                throw new Error("没有这种布丁类型！");
+        }
+    })
+}
+function diff(oldChildren,newChildren){
+    
+    let patches = [];
+    let newKeys = newChildren.map(item=>item.key);
+    // 第一步，把老数组中在新数组中没有的元素移除掉
+    let oldIndex = 0;
+    let newLength = newChildren.length;
+    while(oldIndex< oldChildren.length){
+        let oldKey = oldChildren[oldIndex].key;
+        if(!newKeys.includes(oldKey)){
+            remove(oldIndex);
+            oldChildren.splice(oldIndex,1);
+        }else{
+            oldIndex++; 
+        }
+    }
+    
+    oldIndex = 0;
+    let newIndex = 0;
+    //对比 newKey 和 oldKey 的不同 , 插入新的节点 
+    
+    while(newIndex<newLength){
+        let newKey =( newChildren[newIndex]||{}).key;
+        let oldKey =( oldChildren[oldIndex]||{}).key;
+        if(!oldKey){ // oldChildren 被遍历完的情况下  的情况下插入新的元素 newIndex++ 4c
+            insert(newIndex,newKey);
+            newIndex++;
+        }else if(oldKey!=newKey){  // oldKey!=newKey 的情况下插入新的元素 newIndex++ 
+            let nextOldKey = (oldChildren[oldIndex+1]||{}).key;
+            if(nextOldKey==newKey){
+                remove(newIndex);
+                oldChildren.splice(oldIndex,1);
+            }else{
+                insert(newIndex,newKey);
+                newIndex++;
+            }
+        }else{
+            oldIndex++;
+            newIndex++
+        }
+    }
+
+    function insert(index,key){
+        patches.push({type:INSERT,index,node:el("li",key,key)});
+    }
+
+    function remove(index){
+        patches.push({type:REMOVE,index})
+    }
+
+    return patches;
+}
+```
+   有几个值得注意的 地方  
   
    - 虚拟dom的创建过程 先序深度优先
    - diff 对比的过程只会对同级进行相应的比较 
    - 打补丁的过程是 从下到上 倒着来的 
-
-我们这个地方没有引入key   其实key 在整个dom diff 中扮演了重要的 角色主要优化了这个过程的性能 
-key 主要意义是为了以最小的代价来更新dom   就是最小化性能对资源池（老树）的操作 
 
 虚拟dom的意义是  我们把对dom 的操作 都交由他来处理 避免了一些不必要的dom 回流和重绘
 相关知识可以参考 阮老师的这篇文章：
